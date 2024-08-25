@@ -6,17 +6,15 @@ import {
   Pressable,
   ToastAndroid,
   View,
-  ActivityIndicator,
 } from "react-native";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useState } from "react";
-import * as ImagePicker from "expo-image-picker";
-import { imageToText } from "@/api/ocr";
-import { fetchHarmfulItems } from "@/api/classification";
 import { HarmfulItem } from "@/constants/types";
 import { HarmfulItems } from "@/components/HarmfulItems";
+import { imagePicker } from "@/core/image-picker";
+import { detectHarmfulItems } from "@/core/detect-harmful-items";
 
 export default function HomeScreen() {
   const [category, setCategory] = useState("");
@@ -25,15 +23,8 @@ export default function HomeScreen() {
   const [harmfulItems, setHarmfulItems] = useState<HarmfulItem[]>([]);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
+    const image = await imagePicker();
+    setImage(image);
   };
 
   const reset = () => {
@@ -56,25 +47,18 @@ export default function HomeScreen() {
     ToastAndroid.show("Processing!", ToastAndroid.SHORT);
     setLoading(true);
 
-    const imageText = await imageToText(image);
-    if (!imageText) {
-      setLoading(false);
-      return ToastAndroid.show(
+    const detectedItems = await detectHarmfulItems(image, category);
+
+    if (detectedItems) {
+      setHarmfulItems(detectedItems);
+    } else {
+      ToastAndroid.show(
         "Cannot process image. Please try again later.",
         ToastAndroid.SHORT
       );
     }
 
-    const harmfulItems = await fetchHarmfulItems(category, imageText);
-    if (!harmfulItems) {
-      setLoading(false);
-      return ToastAndroid.show(
-        "Cannot process image. Please try again later.",
-        ToastAndroid.SHORT
-      );
-    }
-
-    setHarmfulItems(harmfulItems);
+    setLoading(false);
   };
 
   return (
@@ -126,11 +110,7 @@ export default function HomeScreen() {
             </Pressable>
           </ThemedView>
         )}
-        {loading ? (
-          <ActivityIndicator size="large" color="#f07e2e" />
-        ) : (
-          <HarmfulItems harmfulItems={harmfulItems} />
-        )}
+        <HarmfulItems harmfulItems={harmfulItems} loading={loading} />
       </ThemedView>
     </ParallaxScrollView>
   );

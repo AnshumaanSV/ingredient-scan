@@ -1,13 +1,26 @@
 import { HarmfulItem } from "@/constants/types";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { ThemedText } from "./ThemedText";
 
 interface HarmfulItemsProps {
   harmfulItems: HarmfulItem[];
+  loading: boolean;
 }
 
-export function HarmfulItems({ harmfulItems }: HarmfulItemsProps) {
-  return harmfulItems.length ? (
+export function HarmfulItems({ harmfulItems, loading }: HarmfulItemsProps) {
+  if (loading) {
+    return <ActivityIndicator size="large" color="#f07e2e" />;
+  }
+
+  if (!harmfulItems.length) {
+    return (
+      <ThemedText type="subtitle">
+        Unable to process. Please try again later
+      </ThemedText>
+    );
+  }
+
+  return (
     <View>
       {harmfulItems[0].itemName !== "Please try again." && (
         <ThemedText type="subtitle">Harmful Ingredients:</ThemedText>
@@ -24,8 +37,6 @@ export function HarmfulItems({ harmfulItems }: HarmfulItemsProps) {
         );
       })}
     </View>
-  ) : (
-    <></>
   );
 }
 
