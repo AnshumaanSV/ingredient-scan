@@ -50,8 +50,8 @@ export const fetchHarmfulItems = async (category:string, items: string): Promise
         if (!itemName || !description) isResponseMalformed = true;
 
         return {
-          itemName,
-          description,
+          itemName: itemName.trim(),
+          description: description.trim(),
         };
       });
 

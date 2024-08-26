@@ -1,5 +1,5 @@
 import { HarmfulItem } from "@/constants/types";
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import { ThemedText } from "./ThemedText";
 
 interface HarmfulItemsProps {
@@ -13,27 +13,28 @@ export function HarmfulItems({ harmfulItems, loading }: HarmfulItemsProps) {
   }
 
   if (!harmfulItems.length) {
-    return (
-      <ThemedText type="subtitle">
-        Unable to process. Please try again later
-      </ThemedText>
-    );
+    return null;
   }
 
   return (
     <View>
       {harmfulItems[0].itemName !== "Please try again." && (
-        <ThemedText type="subtitle">Harmful Ingredients:</ThemedText>
-      )}
-      {harmfulItems.map((item, index) => {
-        return (
-          <ThemedText
-            style={index % 2 === 0 ? styles.harmfulListItem1 : {}}
-            type="default"
-            key={item.itemName}
-          >
-            {item.itemName}: {item.description}
+        <Text>
+          <ThemedText type="subtitle">Found </ThemedText>
+          <ThemedText style={styles.itemName} type="title">
+            {harmfulItems.length}
           </ThemedText>
+          <ThemedText type="subtitle"> harmful ingredients:</ThemedText>
+        </Text>
+      )}
+      {harmfulItems.map((item) => {
+        return (
+          <Text key={item.itemName} style={styles.itemContainer}>
+            <ThemedText style={styles.itemName} type="subtitle">
+              {item.itemName}
+            </ThemedText>
+            <ThemedText type="default"> {item.description}</ThemedText>
+          </Text>
         );
       })}
     </View>
@@ -41,8 +42,13 @@ export function HarmfulItems({ harmfulItems, loading }: HarmfulItemsProps) {
 }
 
 const styles = StyleSheet.create({
-  harmfulListItem1: {
-    backgroundColor: "#404040",
-    marginTop: 10,
+  itemContainer: {
+    marginTop: 20,
+    paddingLeft: 10,
+    paddingRight: 10,
+  },
+  itemName: {
+    fontWeight: "600",
+    color: "#f07e2e",
   },
 });
