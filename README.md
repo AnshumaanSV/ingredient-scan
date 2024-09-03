@@ -1,4 +1,22 @@
-# Welcome to your Expo app 👋
+# Ingredient Scan
+
+Curious if that "healthy" snack is as beneficial as it claims? Or if that top-rated skincare product is truly good for your skin? Ingredient Scan has you covered!
+
+Simply select the product category and upload a clear photo of the ingredient list from the packaging. Ingredient Scan will quickly identify and flag any harmful ingredients, helping you make safer and more informed choices.
+
+## Screenshots
+
+#### Choose a category
+
+![App Screenshot](https://i.postimg.cc/fLK14yJX/1.jpg)
+
+#### Scan the list
+
+![App Screenshot](https://i.postimg.cc/J0zvR8kF/2.jpg)
+
+#### Get the results!
+
+![App Screenshot](https://i.postimg.cc/xCYBFMTn/3.jpg)
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
