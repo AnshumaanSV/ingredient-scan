@@ -7,7 +7,7 @@ import axios from "axios";
 
 export const fetchHarmfulItems = async (
   category: string,
-  items: string
+  items: string,
 ): Promise<HarmfulItem[] | null> => {
   const { classifierEnpoint, classifierPayload, classifierHeader } =
     harmfulItemPreProcessing(category, items);
@@ -16,7 +16,7 @@ export const fetchHarmfulItems = async (
     const response: ClassifierResponse = await axios.post(
       classifierEnpoint,
       classifierPayload,
-      classifierHeader
+      classifierHeader,
     );
 
     return harmfulItemPostProcessing(response);

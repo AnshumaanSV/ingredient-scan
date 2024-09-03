@@ -54,7 +54,7 @@ export default function HomeScreen() {
     } else {
       ToastAndroid.show(
         "Cannot process image. Please try again later.",
-        ToastAndroid.SHORT
+        ToastAndroid.SHORT,
       );
     }
 
