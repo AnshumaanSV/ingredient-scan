@@ -13,8 +13,9 @@ import { ThemedView } from "@/components/ThemedView";
 import { useState } from "react";
 import { HarmfulItem } from "@/constants/types";
 import { HarmfulItems } from "@/components/HarmfulItems";
-import { imagePicker } from "@/core/image-picker";
+import { imagePicker, cameraCapture } from "@/core/image-picker";
 import { detectHarmfulItems } from "@/core/detect-harmful-items";
+import React from "react";
 
 export default function HomeScreen() {
   const [category, setCategory] = useState("");
@@ -24,6 +25,11 @@ export default function HomeScreen() {
 
   const pickImage = async () => {
     const image = await imagePicker();
+    setImage(image);
+  };
+
+  const takePhoto = async () => {
+    const image = await cameraCapture();
     setImage(image);
   };
 
@@ -89,15 +95,22 @@ export default function HomeScreen() {
         >
           <ThemedText type="subtitle">2. Upload ingredients</ThemedText>
           <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 10,
+            }}
           >
             <Pressable onPress={pickImage} style={styles.imageBtn}>
-              <Text style={styles.imageBtnText}>PICK AN IMAGE</Text>
+              <Text style={styles.imageBtnText}>PICK FROM GALLERY</Text>
             </Pressable>
             <Pressable onPress={reset} style={styles.resetBtn}>
               <Text style={styles.resetBtnText}>RESET</Text>
             </Pressable>
           </View>
+          <Pressable onPress={takePhoto} style={styles.cameraBtn}>
+            <Text style={styles.cameraBtnText}>TAKE A PHOTO</Text>
+          </Pressable>
           {image && <Image source={{ uri: image }} style={styles.image} />}
         </ThemedView>
         {category && image && (
@@ -204,5 +217,16 @@ const styles = StyleSheet.create({
   },
   checkContainer: {
     marginBottom: 40,
+  },
+  cameraBtn: {
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: "#4285F4",
+    width: "100%",
+    marginBottom: 10,
+  },
+  cameraBtnText: {
+    color: "white",
+    margin: "auto",
   },
 });

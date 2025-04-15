@@ -13,3 +13,25 @@ export const imagePicker = async (): Promise<string> => {
 
   return "";
 };
+
+export const cameraCapture = async (): Promise<string> => {
+  // Request camera permissions
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+  if (status !== "granted") {
+    console.log("Camera permission denied");
+    return "";
+  }
+
+  const result = await ImagePicker.launchCameraAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    quality: 1,
+  });
+
+  if (!result.canceled) {
+    return result.assets[0].uri;
+  }
+
+  return "";
+};

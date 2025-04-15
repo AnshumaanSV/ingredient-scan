@@ -1,6 +1,7 @@
 import { HarmfulItem } from "@/constants/types";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import { ThemedText } from "./ThemedText";
+import React from "react";
 
 interface HarmfulItemsProps {
   harmfulItems: HarmfulItem[];
