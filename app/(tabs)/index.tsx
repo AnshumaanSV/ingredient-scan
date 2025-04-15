@@ -7,23 +7,95 @@ import {
   ToastAndroid,
   View,
   TouchableOpacity,
+  useColorScheme,
+  Platform,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HarmfulItem } from "@/constants/types";
 import { HarmfulItems } from "@/components/HarmfulItems";
 import { imagePicker, cameraCapture } from "@/core/image-picker";
 import { detectHarmfulItems } from "@/core/detect-harmful-items";
 import React from "react";
+import { AnimatedButton } from "@/components/AnimatedButton";
+import { AnimatedCard } from "@/components/AnimatedCard";
+import { GradientBackground } from "@/components/GradientBackground";
+import { Colors } from "@/constants/Colors";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withDelay,
+  withSequence,
+  FadeIn,
+  FadeInDown,
+  SlideInRight,
+} from "react-native-reanimated";
+
+const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
 export default function HomeScreen() {
+  const colorScheme = useColorScheme() ?? "light";
   const [category, setCategory] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [harmfulItems, setHarmfulItems] = useState<HarmfulItem[]>([]);
+
+  // Animation values
+  const imageScale = useSharedValue(1);
+  const imageOpacity = useSharedValue(0);
+  const categoryOpacity = useSharedValue(0);
+  const buttonOpacity = useSharedValue(0);
+
+  // Entry animations for UI elements
+  useEffect(() => {
+    if (image) {
+      imageOpacity.value = withTiming(1, { duration: 600 });
+      imageScale.value = withSequence(
+        withTiming(1.05, { duration: 300 }),
+        withTiming(1, { duration: 300 }),
+      );
+      categoryOpacity.value = withDelay(300, withTiming(1, { duration: 500 }));
+    } else {
+      imageOpacity.value = 0;
+      categoryOpacity.value = 0;
+      buttonOpacity.value = 0;
+    }
+  }, [image]);
+
+  // Button animation when category is selected
+  useEffect(() => {
+    if (image && category) {
+      buttonOpacity.value = withDelay(200, withTiming(1, { duration: 400 }));
+    } else {
+      buttonOpacity.value = withTiming(0, { duration: 200 });
+    }
+  }, [image, category]);
+
+  const imageAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: imageOpacity.value,
+      transform: [{ scale: imageScale.value }],
+    };
+  });
+
+  const categoryAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: categoryOpacity.value,
+    };
+  });
+
+  const buttonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: buttonOpacity.value,
+    };
+  });
 
   const pickImage = async () => {
     const image = await imagePicker();
@@ -43,16 +115,19 @@ export default function HomeScreen() {
 
   const checkResult = async () => {
     if (loading) {
-      return ToastAndroid.show("Please wait!", ToastAndroid.SHORT);
+      showNotification("Please wait!");
+      return;
     }
     if (!image) {
-      return ToastAndroid.show("Please select an image!", ToastAndroid.SHORT);
+      showNotification("Please select an image!");
+      return;
     }
     if (!category) {
-      return ToastAndroid.show("Please enter a category!", ToastAndroid.SHORT);
+      showNotification("Please enter a category!");
+      return;
     }
 
-    ToastAndroid.show("Processing!", ToastAndroid.SHORT);
+    showNotification("Processing your image...");
     setLoading(true);
 
     const detectedItems = await detectHarmfulItems(image, category);
@@ -60,13 +135,18 @@ export default function HomeScreen() {
     if (detectedItems) {
       setHarmfulItems(detectedItems);
     } else {
-      ToastAndroid.show(
-        "Cannot process image. Please try again later.",
-        ToastAndroid.SHORT,
-      );
+      showNotification("Cannot process image. Please try again later.");
     }
 
     setLoading(false);
+  };
+
+  const showNotification = (message: string) => {
+    if (Platform.OS === "android") {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert("Notification", message);
+    }
   };
 
   const selectCategory = (selectedCategory: string) => {
@@ -82,44 +162,79 @@ export default function HomeScreen() {
           style={styles.coverPicture}
         />
       }
+      headerTitle="Ingredient Scan"
+      withGradientOverlay={true}
     >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Ingredient Scan</ThemedText>
-        <ThemedText type="caption">Discover Safe Choices!</ThemedText>
-      </ThemedView>
+      <Animated.View entering={FadeIn.duration(800)}>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Ingredient Scan</ThemedText>
+          <ThemedText type="caption">Discover Safe Choices!</ThemedText>
+        </ThemedView>
+      </Animated.View>
+
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">1. Select an image</ThemedText>
+        <Animated.View entering={FadeInDown.duration(600).delay(200)}>
+          <ThemedText type="subtitle">1. Select an image</ThemedText>
 
-        <View style={styles.imageOptionsContainer}>
-          <Pressable onPress={takePhoto} style={styles.imageOptionBox}>
-            <Ionicons name="camera" size={40} color="#4285F4" />
-            <Text style={styles.imageOptionText}>Take Photo</Text>
-          </Pressable>
+          <View style={styles.imageOptionsContainer}>
+            <AnimatedCard
+              style={styles.imageOptionCard}
+              onPress={takePhoto}
+              withGradient={true}
+              gradientType="primary"
+              gradientIntensity={0.9}
+            >
+              <View style={styles.imageOptionContent}>
+                <Ionicons name="camera" size={40} color="#FFFFFF" />
+                <Text style={styles.imageOptionText}>Take Photo</Text>
+              </View>
+            </AnimatedCard>
 
-          <Pressable onPress={pickImage} style={styles.imageOptionBox}>
-            <Ionicons name="images" size={40} color="#f07e2e" />
-            <Text style={styles.imageOptionText}>Pick Image</Text>
-          </Pressable>
-        </View>
+            <AnimatedCard
+              style={styles.imageOptionCard}
+              onPress={pickImage}
+              withGradient={true}
+              gradientType="accent"
+              gradientIntensity={0.9}
+            >
+              <View style={styles.imageOptionContent}>
+                <Ionicons name="images" size={40} color="#FFFFFF" />
+                <Text style={styles.imageOptionText}>Pick Image</Text>
+              </View>
+            </AnimatedCard>
+          </View>
+        </Animated.View>
 
         {image && (
           <>
-            <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: image }} style={styles.image} />
-              <Pressable onPress={reset} style={styles.resetBtnSmall}>
-                <Ionicons name="close-circle" size={24} color="#fff" />
-              </Pressable>
-            </View>
+            <AnimatedView
+              style={[styles.imagePreviewContainer, imageAnimatedStyle]}
+            >
+              <AnimatedCard withShadow={true}>
+                <AnimatedImage source={{ uri: image }} style={styles.image} />
+                <Pressable onPress={reset} style={styles.resetBtnSmall}>
+                  <Ionicons name="close-circle" size={24} color="#fff" />
+                </Pressable>
+              </AnimatedCard>
+            </AnimatedView>
 
-            <ThemedView style={styles.categorySection}>
+            <AnimatedView
+              style={[styles.categorySection, categoryAnimatedStyle]}
+            >
               <ThemedText type="subtitle">2. Enter a category</ThemedText>
-              <TextInput
-                style={styles.categoryInput}
-                value={category}
-                onChangeText={setCategory}
-                placeholder="e.g., Food, Drink, Skin Care"
-                placeholderTextColor="grey"
-              />
+
+              <AnimatedCard style={styles.inputCard}>
+                <TextInput
+                  style={[
+                    styles.categoryInput,
+                    { color: Colors[colorScheme].text },
+                  ]}
+                  value={category}
+                  onChangeText={setCategory}
+                  placeholder="e.g., Food, Drink, Skin Care"
+                  placeholderTextColor={Colors[colorScheme].textSecondary}
+                />
+              </AnimatedCard>
 
               <View style={styles.categoryChipsContainer}>
                 <TouchableOpacity
@@ -129,14 +244,20 @@ export default function HomeScreen() {
                   ]}
                   onPress={() => selectCategory("Food")}
                 >
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      category === "Food" && styles.selectedChipText,
-                    ]}
+                  <GradientBackground
+                    type={category === "Food" ? "primary" : "background"}
+                    intensity={category === "Food" ? 1 : 0.5}
+                    style={styles.chipGradient}
                   >
-                    Food
-                  </Text>
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        category === "Food" && styles.selectedChipText,
+                      ]}
+                    >
+                      Food
+                    </Text>
+                  </GradientBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -146,14 +267,20 @@ export default function HomeScreen() {
                   ]}
                   onPress={() => selectCategory("Skin Care")}
                 >
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      category === "Skin Care" && styles.selectedChipText,
-                    ]}
+                  <GradientBackground
+                    type={category === "Skin Care" ? "primary" : "background"}
+                    intensity={category === "Skin Care" ? 1 : 0.5}
+                    style={styles.chipGradient}
                   >
-                    Skin Care
-                  </Text>
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        category === "Skin Care" && styles.selectedChipText,
+                      ]}
+                    >
+                      Skin Care
+                    </Text>
+                  </GradientBackground>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -163,27 +290,39 @@ export default function HomeScreen() {
                   ]}
                   onPress={() => selectCategory("Drink")}
                 >
-                  <Text
-                    style={[
-                      styles.categoryChipText,
-                      category === "Drink" && styles.selectedChipText,
-                    ]}
+                  <GradientBackground
+                    type={category === "Drink" ? "primary" : "background"}
+                    intensity={category === "Drink" ? 1 : 0.5}
+                    style={styles.chipGradient}
                   >
-                    Drink
-                  </Text>
+                    <Text
+                      style={[
+                        styles.categoryChipText,
+                        category === "Drink" && styles.selectedChipText,
+                      ]}
+                    >
+                      Drink
+                    </Text>
+                  </GradientBackground>
                 </TouchableOpacity>
               </View>
-            </ThemedView>
+            </AnimatedView>
           </>
         )}
 
         {image && category && (
-          <ThemedView style={styles.checkContainer}>
-            <Pressable onPress={checkResult} style={styles.resultBtn}>
-              <Text style={styles.resultBtnText}>CHECK RESULTS</Text>
-            </Pressable>
-          </ThemedView>
+          <AnimatedView style={[styles.checkContainer, buttonAnimatedStyle]}>
+            <AnimatedButton
+              title="ANALYZE INGREDIENTS"
+              onPress={checkResult}
+              variant="primary"
+              size="large"
+              fullWidth={true}
+              icon={<Ionicons name="search" size={20} color="#FFFFFF" />}
+            />
+          </AnimatedView>
         )}
+
         <HarmfulItems harmfulItems={harmfulItems} loading={loading} />
       </ThemedView>
     </ParallaxScrollView>
@@ -194,10 +333,10 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: "column",
     gap: 8,
+    marginBottom: 16,
   },
   stepContainer: {
     gap: 16,
-    marginTop: "10%",
   },
   coverPicture: {
     height: "100%",
@@ -206,30 +345,32 @@ const styles = StyleSheet.create({
   imageOptionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 10,
+    marginVertical: 16,
   },
-  imageOptionBox: {
+  imageOptionCard: {
     width: "48%",
-    height: 120,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    height: 130,
+    borderRadius: 16,
+  },
+  imageOptionContent: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    padding: 16,
   },
   imageOptionText: {
     color: "white",
-    marginTop: 10,
-    fontWeight: "500",
+    marginTop: 12,
+    fontWeight: "600",
+    fontSize: 16,
   },
   imagePreviewContainer: {
     position: "relative",
-    marginVertical: 15,
+    marginVertical: 20,
   },
   image: {
     width: "100%",
-    height: 200,
+    height: 220,
     borderRadius: 12,
   },
   resetBtnSmall: {
@@ -238,58 +379,47 @@ const styles = StyleSheet.create({
     right: 10,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 20,
+    padding: 4,
   },
   categorySection: {
-    gap: 12,
+    gap: 16,
     marginTop: 10,
   },
+  inputCard: {
+    padding: 0,
+    overflow: "hidden",
+  },
   categoryInput: {
-    height: 45,
-    borderWidth: 1,
-    borderColor: "grey",
-    borderRadius: 10,
-    color: "white",
-    paddingLeft: 10,
+    height: 50,
+    paddingHorizontal: 16,
+    fontSize: 16,
   },
   categoryChipsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    marginTop: 5,
+    marginTop: 8,
   },
   categoryChip: {
-    paddingHorizontal: 15,
-    paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
+    overflow: "hidden",
+  },
+  chipGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
   },
   selectedChip: {
-    backgroundColor: "#4285F4",
-    borderColor: "#4285F4",
+    borderWidth: 0,
   },
   categoryChipText: {
     color: "white",
+    fontWeight: "500",
   },
   selectedChipText: {
     fontWeight: "bold",
   },
-  resultBtn: {
-    height: 50,
-    width: "100%",
-    borderRadius: 10,
-    backgroundColor: "#4285F4",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  resultBtnText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
   checkContainer: {
-    marginVertical: 20,
+    marginVertical: 24,
   },
 });
