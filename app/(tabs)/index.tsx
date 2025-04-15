@@ -6,7 +6,9 @@ import {
   Pressable,
   ToastAndroid,
   View,
+  TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -67,6 +69,10 @@ export default function HomeScreen() {
     setLoading(false);
   };
 
+  const selectCategory = (selectedCategory: string) => {
+    setCategory(selectedCategory);
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
@@ -82,43 +88,98 @@ export default function HomeScreen() {
         <ThemedText type="caption">Discover Safe Choices!</ThemedText>
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">1. Enter a category</ThemedText>
-        <TextInput
-          style={styles.categoryInput}
-          value={category}
-          onChangeText={setCategory}
-          placeholder="e.g., Food, Drink, Skin Care"
-          placeholderTextColor="grey"
-        ></TextInput>
-        <ThemedView
-          style={category ? styles.stepContainer : styles.lightStepContainer}
-        >
-          <ThemedText type="subtitle">2. Upload ingredients</ThemedText>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 10,
-            }}
-          >
-            <Pressable onPress={pickImage} style={styles.imageBtn}>
-              <Text style={styles.imageBtnText}>PICK FROM GALLERY</Text>
-            </Pressable>
-            <Pressable onPress={reset} style={styles.resetBtn}>
-              <Text style={styles.resetBtnText}>RESET</Text>
-            </Pressable>
-          </View>
-          <Pressable onPress={takePhoto} style={styles.cameraBtn}>
-            <Text style={styles.cameraBtnText}>TAKE A PHOTO</Text>
+        <ThemedText type="subtitle">1. Select an image</ThemedText>
+
+        <View style={styles.imageOptionsContainer}>
+          <Pressable onPress={takePhoto} style={styles.imageOptionBox}>
+            <Ionicons name="camera" size={40} color="#4285F4" />
+            <Text style={styles.imageOptionText}>Take Photo</Text>
           </Pressable>
-          {image && <Image source={{ uri: image }} style={styles.image} />}
-        </ThemedView>
-        {category && image && (
+
+          <Pressable onPress={pickImage} style={styles.imageOptionBox}>
+            <Ionicons name="images" size={40} color="#f07e2e" />
+            <Text style={styles.imageOptionText}>Pick Image</Text>
+          </Pressable>
+        </View>
+
+        {image && (
+          <>
+            <View style={styles.imagePreviewContainer}>
+              <Image source={{ uri: image }} style={styles.image} />
+              <Pressable onPress={reset} style={styles.resetBtnSmall}>
+                <Ionicons name="close-circle" size={24} color="#fff" />
+              </Pressable>
+            </View>
+
+            <ThemedView style={styles.categorySection}>
+              <ThemedText type="subtitle">2. Enter a category</ThemedText>
+              <TextInput
+                style={styles.categoryInput}
+                value={category}
+                onChangeText={setCategory}
+                placeholder="e.g., Food, Drink, Skin Care"
+                placeholderTextColor="grey"
+              />
+
+              <View style={styles.categoryChipsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.categoryChip,
+                    category === "Food" && styles.selectedChip,
+                  ]}
+                  onPress={() => selectCategory("Food")}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      category === "Food" && styles.selectedChipText,
+                    ]}
+                  >
+                    Food
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.categoryChip,
+                    category === "Skin Care" && styles.selectedChip,
+                  ]}
+                  onPress={() => selectCategory("Skin Care")}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      category === "Skin Care" && styles.selectedChipText,
+                    ]}
+                  >
+                    Skin Care
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.categoryChip,
+                    category === "Drink" && styles.selectedChip,
+                  ]}
+                  onPress={() => selectCategory("Drink")}
+                >
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      category === "Drink" && styles.selectedChipText,
+                    ]}
+                  >
+                    Drink
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ThemedView>
+          </>
+        )}
+
+        {image && category && (
           <ThemedView style={styles.checkContainer}>
-            <Pressable
-              onPress={checkResult}
-              style={image ? styles.resultBtn : styles.disabledResultBtn}
-            >
+            <Pressable onPress={checkResult} style={styles.resultBtn}>
               <Text style={styles.resultBtnText}>CHECK RESULTS</Text>
             </Pressable>
           </ThemedView>
@@ -135,98 +196,100 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stepContainer: {
-    gap: 8,
+    gap: 16,
     marginTop: "10%",
-  },
-  lightStepContainer: {
-    gap: 8,
-    marginTop: "10%",
-    opacity: 0.2,
   },
   coverPicture: {
     height: "100%",
     width: "100%",
   },
+  imageOptionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  imageOptionBox: {
+    width: "48%",
+    height: 120,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  imageOptionText: {
+    color: "white",
+    marginTop: 10,
+    fontWeight: "500",
+  },
+  imagePreviewContainer: {
+    position: "relative",
+    marginVertical: 15,
+  },
+  image: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+  },
+  resetBtnSmall: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+  },
+  categorySection: {
+    gap: 12,
+    marginTop: 10,
+  },
   categoryInput: {
-    height: 40,
+    height: 45,
     borderWidth: 1,
     borderColor: "grey",
     borderRadius: 10,
     color: "white",
     paddingLeft: 10,
   },
-  imagePicker: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  categoryChipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 5,
   },
-  imageBtn: {
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#f07e2e",
-    width: "75%",
-  },
-  imageBtnText: {
-    color: "white",
-    margin: "auto",
-  },
-  resetBtn: {
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: "#cccdcf",
-    width: "20%",
-  },
-  resetBtnText: {
-    color: "black",
-    margin: "auto",
-  },
-  disabledResultBtn: {
-    height: 50,
-    width: "100%",
+  categoryChip: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     borderWidth: 1,
-    borderColor: "grey",
-    borderRadius: 10,
-    backgroundColor: "white",
-    color: "black",
-    opacity: 0.5,
-    position: "absolute",
-    bottom: 0,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  selectedChip: {
+    backgroundColor: "#4285F4",
+    borderColor: "#4285F4",
+  },
+  categoryChipText: {
+    color: "white",
+  },
+  selectedChipText: {
+    fontWeight: "bold",
   },
   resultBtn: {
     height: 50,
     width: "100%",
-    borderWidth: 1,
-    borderColor: "grey",
-    borderRadius: 10,
-    backgroundColor: "white",
-    color: "black",
-    position: "static",
-    bottom: 0,
-  },
-  resultBtnText: {
-    color: "black",
-    margin: "auto",
-  },
-  image: {
-    width: "100%",
-    height: 100,
-    opacity: 0.5,
-    borderRadius: 10,
-    marginTop: 10,
-    marginBottom: 30,
-  },
-  checkContainer: {
-    marginBottom: 40,
-  },
-  cameraBtn: {
-    height: 40,
     borderRadius: 10,
     backgroundColor: "#4285F4",
-    width: "100%",
-    marginBottom: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
   },
-  cameraBtnText: {
+  resultBtnText: {
     color: "white",
-    margin: "auto",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  checkContainer: {
+    marginVertical: 20,
   },
 });
