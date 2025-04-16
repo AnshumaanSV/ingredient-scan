@@ -3,23 +3,22 @@ import {
   harmfulItemPostProcessing,
   harmfulItemPreProcessing,
 } from "@/core/openai";
-import axios from "axios";
+import OpenAI from "openai";
+const client = new OpenAI({
+  apiKey: process.env.EXPO_PUBLIC_OPENAI_KEY,
+  dangerouslyAllowBrowser: true,
+});
 
 export const fetchHarmfulItems = async (
   category: string,
   items: string,
 ): Promise<HarmfulItem[] | null> => {
-  const { classifierEnpoint, classifierPayload, classifierHeader } =
-    harmfulItemPreProcessing(category, items);
+  const { classifierPayload } = harmfulItemPreProcessing(category, items);
 
   try {
-    const response: ClassifierResponse = await axios.post(
-      classifierEnpoint,
-      classifierPayload,
-      classifierHeader,
-    );
+    const response = await client.responses.create(classifierPayload);
 
-    return harmfulItemPostProcessing(response);
+    return harmfulItemPostProcessing(response.output_text);
   } catch (error) {
     return null;
   }
